@@ -1,0 +1,121 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta http-equiv="Content-Security-Policy" content="default-src * data:; style-src * 'unsafe-inline'; script-src * 'unsafe-inline' 'unsafe-eval'">
+    <script src="components/loader.js"></script>
+    <script src="components/monaca-jquery/jquery.js"></script>
+    <script src="components/jquery-touchswipe/jquery.touchSwipe.min.js"></script>
+    <script src="components/animate.css/animate.min.js"></script>
+    <link rel="stylesheet" href="components/loader.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style type="text/css">
+        #flipper {
+            display: block;
+            overflow: hidden;
+        }
+        
+        #flipper > div {
+            float: left;
+            width: 100%;
+            position: absolute;
+            left: 0;
+            right: 0;
+            // display: none;
+        }
+        
+        #flipper > div.active {
+            // display: inline;
+        }
+    </style>
+    <script>
+        
+        document.addEventListener("deviceready", onDeviceReady, false);
+        
+        var db;
+        
+        function onDeviceReady() {
+            db = window.openDatabase("CarsDb", "1.0", "Cars database", 200000);
+            db.transaction(function(tx) {
+                tx.executeSql('create table if not exists cars (id int primary key autoincrement, name varchar(255), plate varchar(255))');
+            }, function() {
+                alert('success');
+            }, function() {
+                alert('error');
+            });
+            db.transaction(function(tx) {
+                tx.executeSql('select * from cars', [], function(tx2, results) {
+                    // this will be empty since no rows were inserted.
+                    console.log("Insert ID = " + results.insertId);
+                    // this will be 0 since it is a select statement
+                    console.log("Rows Affected = " + results.rowAffected);
+                    // the number of rows returned by the select statement
+                    console.log("Insert ID = " + results.rows.length);
+                }, errorCB);
+            });
+        }
+        
+        function populateDB(tx) {
+            tx.executeSql('create table if not exists cars (id int primary key autoincrement, name varchar(255), plate varchar(255))');
+        }
+        
+        function add(elem) {
+            var name = $(elem).parent().attr('data-name');
+            alert(name);
+            // var db = window.openDatabase("CarsDb", "1.0", "Cars database", 200000);
+            db.transaction(function(tx) {
+                tx.executeSql('insert into cars (name) values (' + name + ')');
+            });
+        }
+        
+        $(function() {
+
+            $('#flipper').swipe(
+            {
+                swipe: function(event, direction, distance, duration, fingerCount, fingerData) 
+                {
+                    if (direction === 'left') k++;
+                    else if (direction === 'right') k--;
+                    if (k > $('#flipper > div').length) {
+                        k = 1;
+                    }
+                    if (k < 1) {
+                        k = $('#flipper > div').length;
+                    }
+                    flip(direction);
+                }
+            });
+
+            var cars = new Array;
+            cars.push({ name: 'A', img: 'images/1.png' });
+            cars.push({ name: 'B', img: 'images/2.png' });
+            cars.push({ name: 'C', img: 'images/1.png' });
+            
+            for (var i = 0; i < cars.length; i++) {
+                var car = cars[i];
+                $('#flipper').append('<div data-name="' + car.name + '"><img src="' + car.img + '" style="width: 100%; " /><h2>' + car.name + '</h2><button onclick="add(this); ">Нэмэх</button></div>');
+            }
+            
+            $('#flipper div:nth-child(1)').addClass('active');
+            flip('left');
+
+        });
+        
+        var k = 1;
+        
+        function flip(direction) {
+            $('#flipper div.active').addClass('animated ' + (direction === 'left' ? 'bounceOutLeft' : 'bounceOutRight') + '');
+            $('#flipper div:nth-child(' + k + ')').removeClass().addClass('animated ' + (direction === 'left' ? 'bounceInRight' : 'bounceInLeft') + ' active');
+        }
+    </script>
+</head>
+<body>
+
+    <h2>УНААГАА СОНГОНО УУ</h2>
+
+    <div id="flipper">
+    </div>
+
+</body>
+</html>
